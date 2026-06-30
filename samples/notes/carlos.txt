@@ -1,0 +1,2 @@
+Carlos Reyes -- backend specialist. Email carlos.reyes@example.com.
+About 6 years, mostly Go and Postgres. Also AWS and Docker.

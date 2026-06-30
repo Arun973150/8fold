@@ -1,0 +1,13 @@
+{
+  "fields": [
+    { "path": "full_name", "type": "string", "required": true },
+    { "path": "primary_email", "from": "emails[0]", "type": "string" },
+    { "path": "phone", "from": "phones[0]", "type": "string", "normalize": "E164" },
+    { "path": "skills", "from": "skills[].name", "type": "string[]", "normalize": "canonical" },
+    { "path": "country", "from": "location.country", "type": "string" },
+    { "path": "github", "from": "links.github", "type": "string" }
+  ],
+  "include_confidence": true,
+  "include_provenance": false,
+  "on_missing": "null"
+}

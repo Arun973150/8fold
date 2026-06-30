@@ -1,0 +1,20 @@
+﻿__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+*.db
+
+# personal / real resumes dropped in the repo root — never commit to a public repo
+/*.pdf
+/*.docx
+!samples/resumes/*
+# local AI/tool state
+.claude/
+.benchmarks/
+
+# personalized generated submission; keep docs/DESIGN.pdf
+docs/*_Eightfold.pdf
+

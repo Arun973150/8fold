@@ -1,0 +1,41 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ name }} — Eightfold</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<header class="topbar">
+
+  <nav class="nav-capsule" aria-label="Primary"><a class="nav-item" href="{{ url_for('dashboard') }}">Overview</a><a class="nav-item active" href="{{ url_for('dashboard') }}#review-queue">Candidates</a><a class="nav-item" href="{{ url_for('dashboard') }}#trust-calibration">Trust layer</a></nav>
+  <div class="system-state"><span class="live-dot"></span>Review system online</div>
+</header>
+<main class="detail-main">
+  <section class="detail-hero">
+    <div><p class="eyebrow">Candidate record</p><h1>{{ name }}</h1><div class="record-meta"><span>{{ cid }}</span><span class="pill s-{{ status }}">{{ status.replace('_',' ') }}</span></div></div>
+    <a class="outline-button" href="{{ url_for('dashboard') }}">← Back to queue</a>
+  </section>
+
+  {% if report.needs_review and status != 'reviewed' %}<section class="review-alert panel"><span class="alert-icon">!</span><div><h2>Human review recommended</h2><ul>{% for r in report.review_reasons %}<li>{{ r }}</li>{% endfor %}</ul></div></section>{% endif %}
+
+  <section class="profile-grid">
+  {% for c in cards %}<article class="field-card panel {{ 'conflict' if c.conflict else '' }}">
+    <div class="field-heading"><span>{{ c.field.replace('_',' ') }}</span><div>{% if c.confidence is not none %}<span class="pill {{ c.band }}">{{ c.confidence }}</span>{% endif %}{% if c.overridden %}<span class="badge">overridden</span>{% endif %}</div></div>
+    {% if c.display is string %}<div class="field-value">{{ c.display }}</div>{% else %}<div class="field-value">{% for line in c.display %}{{ line }}<br>{% endfor %}</div>{% endif %}
+    {% if c.sources %}<p class="sources">Sources · {{ c.sources|join(', ') }}</p>{% endif %}
+    {% if c.reason %}<p class="reason">{{ c.reason }}</p>{% endif %}
+    {% if c.options %}<form class="options" method="post" action="{{ url_for('override', cid=cid) }}"><input type="hidden" name="field" value="{{ c.field }}">{% for o in c.options %}<label><input type="radio" name="value" value="{{ o.value }}" {{ 'checked' if o.won else '' }}><span>{{ o.value }} <small>({{ o.source }}, base {{ o.base }})</small></span></label>{% endfor %}<button class="outline-button" type="submit">Override &amp; persist</button></form>{% endif %}
+  </article>{% endfor %}
+  </section>
+  <form class="review-action" method="post" action="{{ url_for('review', cid=cid) }}"><button type="submit">Mark reviewed &amp; accept <span>✓</span></button></form>
+</main>
+</body>
+</html>
+
+
+

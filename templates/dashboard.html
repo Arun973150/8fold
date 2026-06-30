@@ -1,0 +1,73 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eightfold — Review Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<header class="topbar">
+
+  <nav class="nav-capsule" aria-label="Primary"><a class="nav-item active" href="{{ url_for('dashboard') }}">Overview</a><a class="nav-item" href="#review-queue">Candidates</a><a class="nav-item" href="#trust-calibration">Trust layer</a></nav>
+  <div class="system-state"><span class="live-dot"></span>Review system online</div>
+</header>
+<main>
+  <section class="hero">
+    <div class="hero-copy"><h1>Trust the data.<br>Review the exceptions.</h1><p>One quiet workspace for resolving candidate records, understanding provenance, and keeping human judgment in the loop.</p></div>
+    <div class="batch-quality"><div><span>Average confidence</span><strong>{{ b.avg_confidence }}</strong></div><div><span>Average completeness</span><strong>{{ b.avg_completeness }}</strong></div></div>
+  </section>
+
+  <form id="data-source" class="source-panel panel" method="post">
+    <div class="panel-heading"><div><h2>Data source</h2><p>Configure and refresh the candidate index</p></div><span class="step">01</span></div>
+    <div><label for="inputs">Inputs directory</label><input id="inputs" type="text" name="inputs" value="{{ s.inputs }}"></div>
+    <div><label for="threshold">Review threshold</label><input id="threshold" type="number" step="0.05" min="0" max="1" name="threshold" value="{{ s.threshold }}"></div>
+    <label class="check-control" for="fetch_github"><input id="fetch_github" type="checkbox" name="fetch_github" {{ 'checked' if s.fetch_github else '' }}> Enrich with GitHub</label>
+    <button type="submit">Ingest &amp; reindex <span>↗</span></button>
+  </form>
+
+  <section class="metrics" aria-label="Candidate metrics">
+    <article class="metric panel"><span class="metric-dot"></span><strong>{{ b.total }}</strong><p>Total candidates</p></article>
+    <article class="metric panel attention"><span class="metric-dot"></span><strong>{{ b.pending }}</strong><p>Need review</p></article>
+    <article class="metric panel"><span class="metric-dot"></span><strong>{{ b.reviewed }}</strong><p>Human reviewed <em>↑</em></p></article>
+    <article class="metric panel"><span class="metric-dot"></span><strong>{{ b.accepted }}</strong><p>Auto-accepted</p></article>
+    <article class="metric panel"><span class="metric-dot"></span><strong>{{ b.with_conflicts }}</strong><p>With conflicts</p></article>
+  </section>
+
+  <section id="review-queue" class="queue panel">
+    <div class="queue-heading"><div><p class="eyebrow">Priority view</p><h2>Review queue</h2><p>Lower-confidence records rise to the top.</p></div><span class="count-pill">{{ b.total }} profiles</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Candidate</th><th>Status</th><th>Confidence</th><th>Complete</th><th>Conflicts</th><th>Flags</th></tr></thead>
+      <tbody>{% for row in rows %}<tr>
+        <td><a class="candidate" href="{{ url_for('candidate', cid=row.id) }}"><span class="avatar">{{ row.name[:1]|upper }}</span><span><b>{{ row.name }}</b><small>{{ row.id }}</small></span></a></td>
+        <td><span class="pill s-{{ row.status }}">{{ row.status.replace('_',' ') }}</span></td>
+        <td><span class="bar"><span class="{{ row.band }}" style="width:{{ row.confpct }}%"></span></span><span class="confidence-value">{{ row.overall_confidence }}</span></td>
+        <td class="muted">{{ row.completeness }}</td><td class="muted">{{ row.conflicts }}</td>
+        <td>{% for f in row.flags %}<span class="flag">{{ f.replace('_',' ') }}</span>{% endfor %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section id="trust-calibration" class="calibration-panel panel">
+    <div class="panel-heading"><div><h2>Source trust calibration</h2><p>Weights self-adjust as recruiters override values &mdash; a corrected source loses trust.</p></div><span class="step">02</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Source</th><th>Base weight</th><th>Calibrated</th><th>Overrides</th><th>Records</th><th>Override rate</th></tr></thead>
+      <tbody>{% for c in calibration %}<tr>
+        <td><b>{{ c.source }}</b></td>
+        <td class="muted">{{ c.base_weight }}</td>
+        <td>{% if c.calibrated_weight < c.base_weight %}<span class="flag">{{ c.calibrated_weight }} ↓</span>{% else %}{{ c.calibrated_weight }}{% endif %}</td>
+        <td class="muted">{{ c.overrides }}</td>
+        <td class="muted">{{ c.exposure }}</td>
+        <td class="muted">{{ c.override_rate }}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+</main>
+</body>
+</html>
+
+
+

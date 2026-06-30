@@ -1,0 +1,4 @@
+Name: Jane Doe
+Strong candidate. Reachable at jane.doe@example.com or 415-555-0132.
+GitHub: github.com/octocat  |  LinkedIn: linkedin.com/in/jane-doe
+Roughly 8 years experience. Comfortable with Python, React, GraphQL and some Kubernetes.

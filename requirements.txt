@@ -1,0 +1,9 @@
+phonenumbers>=8.13
+pycountry>=23.12
+rapidfuzz>=3.6
+jsonschema>=4.21
+requests>=2.31
+flask>=3.0
+pdfplumber>=0.11
+python-docx>=1.1
+pytest>=8.0

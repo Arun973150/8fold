@@ -1,0 +1,4 @@
+name,email,phone,current_company,title
+Jane Doe,jane.doe@example.com,+1 415-555-0132,Acme,Senior Engineer
+Carlos Reyes,carlos.reyes@example.com,(202) 555-0188,Globex,Backend Engineer
+Sam Lee,,not-a-number,,

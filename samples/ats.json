@@ -1,0 +1,39 @@
+{
+  "candidates": [
+    {
+      "applicant_name": "Jane A. Doe",
+      "contact": { "email_address": "jane.doe@example.com", "mobile": "(415) 555-0132" },
+      "job_title": "Staff Engineer",
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA",
+      "tags": ["Python", "reactjs", "Kubernetes", "graphql"],
+      "experience_years": 8,
+      "github": "octocat",
+      "work_history": [
+        { "org": "Acme Corp", "role": "Staff Engineer", "from": "2021-03", "to": "present", "summary": "Leads the payments platform team." },
+        { "org": "Globex", "role": "Software Engineer", "from": "Jan 2018", "to": "sometime 2021" }
+      ],
+      "schools": [
+        { "name": "MIT", "degree": "B.S.", "major": "Computer Science", "grad_year": 2017 }
+      ]
+    },
+    {
+      "applicant_name": "Carlos Reyes",
+      "contact": { "email_address": "carlos.reyes@example.com", "mobile": "+1 202 555 0188" },
+      "job_title": "Backend Engineer",
+      "city": "Austin",
+      "state": "TX",
+      "country": "United States",
+      "tags": ["golang", "postgres", "docker", "aws"],
+      "experience_years": 6,
+      "github": "this-handle-surely-does-not-exist-zzz",
+      "work_history": [
+        { "org": "Globex", "role": "Backend Engineer", "from": "2019-06", "to": "present" }
+      ],
+      "schools": [
+        { "name": "UT Austin", "degree": "BS", "major": "Computer Engineering", "grad_year": 2031 }
+      ]
+    }
+  ]
+}

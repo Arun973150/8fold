@@ -1,0 +1,45 @@
+[
+  {
+    "full_name": "Jane A. Doe",
+    "primary_email": "jane.doe@example.com",
+    "phone": "+14155550132",
+    "skills": [
+      "AWS",
+      "GraphQL",
+      "Kubernetes",
+      "Python",
+      "React",
+      "Terraform"
+    ],
+    "country": "US",
+    "github": "octocat",
+    "overall_confidence": 0.9336
+  },
+  {
+    "full_name": "Carlos Reyes",
+    "primary_email": "carlos.reyes@example.com",
+    "phone": "+12025550188",
+    "skills": [
+      "AWS",
+      "Docker",
+      "Go",
+      "Kafka",
+      "PostgreSQL"
+    ],
+    "country": "US",
+    "github": "this-handle-surely-does-not-exist-zzz",
+    "overall_confidence": 0.9671
+  },
+  {
+    "full_name": "Sam Lee",
+    "primary_email": null,
+    "phone": null,
+    "skills": [
+      "Machine Learning",
+      "Python"
+    ],
+    "country": null,
+    "github": null,
+    "overall_confidence": 0.54
+  }
+]

@@ -1,0 +1,1 @@
+{ this is deliberately not valid json -- the ATS adapter must ignore it without crashing

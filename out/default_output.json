@@ -1,0 +1,496 @@
+[
+  {
+    "candidate_id": "jane.doe@example.com",
+    "full_name": "Jane A. Doe",
+    "emails": [
+      "jane.doe@example.com"
+    ],
+    "phones": [
+      "+14155550132"
+    ],
+    "location": {
+      "city": "San Francisco",
+      "region": "CA",
+      "country": "US"
+    },
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/jane-doe",
+      "github": "octocat",
+      "portfolio": "https://jane.dev",
+      "other": []
+    },
+    "headline": "Staff Engineer",
+    "years_experience": 8.0,
+    "skills": [
+      {
+        "name": "AWS",
+        "confidence": 0.385,
+        "sources": [
+          "resume"
+        ]
+      },
+      {
+        "name": "GraphQL",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "Kubernetes",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "Python",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "React",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "Terraform",
+        "confidence": 0.385,
+        "sources": [
+          "resume"
+        ]
+      }
+    ],
+    "experience": [
+      {
+        "company": "Acme Corp",
+        "title": "Staff Engineer",
+        "start": "2021-03",
+        "end": null,
+        "summary": "Leads the payments platform team."
+      },
+      {
+        "company": "Globex",
+        "title": "Software Engineer",
+        "start": "2018-01",
+        "end": null,
+        "summary": null
+      },
+      {
+        "company": "Acme",
+        "title": "Senior Engineer",
+        "start": null,
+        "end": null,
+        "summary": null
+      },
+      {
+        "company": "Initech",
+        "title": "Junior Developer",
+        "start": "2016-06",
+        "end": "2017-12",
+        "summary": null
+      }
+    ],
+    "education": [
+      {
+        "institution": "MIT",
+        "degree": "B.S.",
+        "field": "Computer Science",
+        "end_year": 2017
+      }
+    ],
+    "provenance": [
+      {
+        "field": "full_name",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "full_name",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "full_name",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "full_name",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "headline",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "years_experience",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "years_experience",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "emails",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "emails",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "emails",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "emails",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "phones",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "phones",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "phones",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "phones",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "location",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "links",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "links",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "skills",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "skills",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "skills",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "experience",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "experience",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "experience",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "education",
+        "source": "ats_json",
+        "method": "field_map"
+      }
+    ],
+    "overall_confidence": 0.9336
+  },
+  {
+    "candidate_id": "carlos.reyes@example.com",
+    "full_name": "Carlos Reyes",
+    "emails": [
+      "carlos.reyes@example.com"
+    ],
+    "phones": [
+      "+12025550188"
+    ],
+    "location": {
+      "city": "Austin",
+      "region": "TX",
+      "country": "US"
+    },
+    "links": {
+      "linkedin": null,
+      "github": "this-handle-surely-does-not-exist-zzz",
+      "portfolio": "https://carlosreyes.dev",
+      "other": []
+    },
+    "headline": "Backend Engineer",
+    "years_experience": 6.0,
+    "skills": [
+      {
+        "name": "AWS",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "Docker",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "Go",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      },
+      {
+        "name": "Kafka",
+        "confidence": 0.385,
+        "sources": [
+          "resume"
+        ]
+      },
+      {
+        "name": "PostgreSQL",
+        "confidence": 1.0,
+        "sources": [
+          "ats_json",
+          "recruiter_notes",
+          "resume"
+        ]
+      }
+    ],
+    "experience": [
+      {
+        "company": "Globex",
+        "title": "Backend Engineer",
+        "start": "2019-06",
+        "end": null,
+        "summary": null
+      }
+    ],
+    "education": [
+      {
+        "institution": "UT Austin",
+        "degree": "BS",
+        "field": "Computer Engineering",
+        "end_year": 2031
+      }
+    ],
+    "provenance": [
+      {
+        "field": "full_name",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "full_name",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "full_name",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "headline",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "years_experience",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "years_experience",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "emails",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "emails",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "emails",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "emails",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "phones",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "phones",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "phones",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "location",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "links",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "links",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "skills",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "skills",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "skills",
+        "source": "resume",
+        "method": "regex"
+      },
+      {
+        "field": "experience",
+        "source": "ats_json",
+        "method": "field_map"
+      },
+      {
+        "field": "education",
+        "source": "ats_json",
+        "method": "field_map"
+      }
+    ],
+    "overall_confidence": 0.9671
+  },
+  {
+    "candidate_id": "sam-lee",
+    "full_name": "Sam Lee",
+    "emails": [],
+    "phones": [],
+    "location": {
+      "city": null,
+      "region": null,
+      "country": null
+    },
+    "links": {
+      "linkedin": null,
+      "github": null,
+      "portfolio": null,
+      "other": []
+    },
+    "headline": null,
+    "years_experience": 3.0,
+    "skills": [
+      {
+        "name": "Machine Learning",
+        "confidence": 0.35,
+        "sources": [
+          "recruiter_notes"
+        ]
+      },
+      {
+        "name": "Python",
+        "confidence": 0.35,
+        "sources": [
+          "recruiter_notes"
+        ]
+      }
+    ],
+    "experience": [],
+    "education": [],
+    "provenance": [
+      {
+        "field": "full_name",
+        "source": "recruiter_csv",
+        "method": "field_map"
+      },
+      {
+        "field": "full_name",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "years_experience",
+        "source": "recruiter_notes",
+        "method": "regex"
+      },
+      {
+        "field": "skills",
+        "source": "recruiter_notes",
+        "method": "regex"
+      }
+    ],
+    "overall_confidence": 0.54
+  }
+]
