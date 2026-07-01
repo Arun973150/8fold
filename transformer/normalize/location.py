@@ -12,14 +12,23 @@ from typing import Optional
 
 import pycountry
 
-# Informal names / abbreviations pycountry's fuzzy search handles poorly.
+# Explicit informal names / endonyms pycountry does not resolve on its own. We use
+# an auditable table rather than fuzzy matching on purpose: fuzzy search maps
+# "Republic of Korea" to North Korea -- a wrong-but-confident error, which is worse
+# than returning None. Everything here is deterministic and correct.
 _COUNTRY_ALIASES = {
     "usa": "US", "u.s.a.": "US", "u.s.": "US", "us": "US", "america": "US",
     "united states": "US", "united states of america": "US",
     "uk": "GB", "u.k.": "GB", "britain": "GB", "great britain": "GB",
     "england": "GB", "united kingdom": "GB",
-    "uae": "AE", "south korea": "KR", "korea": "KR", "russia": "RU",
-    "bharat": "IN", "india": "IN",
+    "uae": "AE", "south korea": "KR", "republic of korea": "KR", "korea": "KR",
+    "north korea": "KP", "russia": "RU", "bharat": "IN", "india": "IN",
+    # common latin-script endonyms
+    "deutschland": "DE", "nederland": "NL", "holland": "NL", "brasil": "BR",
+    "espana": "ES", "españa": "ES", "italia": "IT", "suomi": "FI",
+    "sverige": "SE", "norge": "NO", "danmark": "DK", "osterreich": "AT",
+    "österreich": "AT", "schweiz": "CH", "suisse": "CH", "polska": "PL",
+    "turkiye": "TR", "türkiye": "TR", "cesko": "CZ", "magyarorszag": "HU",
 }
 
 

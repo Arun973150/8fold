@@ -15,15 +15,21 @@ from __future__ import annotations
 import os
 
 from flask import Flask, render_template, request, redirect, url_for
+from werkzeug.utils import secure_filename
 
 from transformer.store import Repository
 from transformer.store.ingest import ingest_dir, ensure_seeded
+from transformer.sources import resume_source, github_source, notes_source
+from transformer.model import SourceRecord, SOURCE_RECRUITER_NOTES, METHOD_REGEX
 
 DB_PATH = os.environ.get("TRANSFORMER_DB", "candidates.db")
 SETTINGS = {"inputs": "samples", "threshold": float(os.environ.get("REVIEW_THRESHOLD", "0.6")),
             "fetch_github": False}
+UPLOADS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+os.makedirs(UPLOADS, exist_ok=True)
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024  # 12 MB upload cap
 REPO = Repository(DB_PATH, threshold=SETTINGS["threshold"])
 ensure_seeded(REPO, SETTINGS["inputs"], SETTINGS["fetch_github"])
 
@@ -150,7 +156,45 @@ def review(cid):
     return redirect(url_for("dashboard"))
 
 
+@app.route("/ingest-candidate", methods=["POST"])
+def ingest_candidate():
+    """Interactive ingest: a résumé upload + optional GitHub handle + optional note,
+    fused into one candidate and shown live."""
+    records = []
+
+    f = request.files.get("resume")
+    if f and f.filename and f.filename.lower().endswith((".pdf", ".docx")):
+        path = os.path.join(UPLOADS, secure_filename(f.filename))
+        f.save(path)
+        records += resume_source.load(path)   # heuristic (+ LLM if GROQ_API_KEY set)
+
+    note = (request.form.get("note") or "").strip()
+    if note:
+        raw = notes_source.parse_text(note)
+        if raw:
+            records.append(SourceRecord(SOURCE_RECRUITER_NOTES, raw, {k: METHOD_REGEX for k in raw}))
+
+    # GitHub handle: typed wins, else discovered from a résumé hyperlink.
+    handle = (request.form.get("github") or "").strip().lstrip("@")
+    if not handle:
+        for r in records:
+            gh = (r.raw.get("links") or {}).get("github")
+            if gh:
+                handle = str(gh).rstrip("/").split("/")[-1]
+                break
+    if handle:
+        gh_rec = github_source.fetch(handle)   # live, degrades to None
+        if gh_rec:
+            records.append(gh_rec)
+
+    # Ingest all; identity resolution clusters them into one candidate.
+    cids = [REPO.ingest(r) for r in records]
+    return redirect(url_for("candidate", cid=cids[0]) if cids else url_for("dashboard"))
+
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # debug is opt-in: the Werkzeug debugger allows code execution, so never on by
+    # default. Enable locally with FLASK_DEBUG=1 if you want auto-reload.
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1", port=5000)
 
 

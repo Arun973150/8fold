@@ -29,6 +29,14 @@
     <button type="submit">Ingest &amp; reindex <span>↗</span></button>
   </form>
 
+  <form id="add-candidate" class="source-panel panel" method="post" action="{{ url_for('ingest_candidate') }}" enctype="multipart/form-data">
+    <div class="panel-heading"><div><h2>Add a candidate</h2><p>Drop a résumé, add a GitHub handle or a note &mdash; watch the profile build live</p></div><span class="step">02</span></div>
+    <div><label for="resume">Résumé (PDF / DOCX)</label><input id="resume" type="file" name="resume" accept=".pdf,.docx"></div>
+    <div><label for="github">GitHub handle</label><input id="github" type="text" name="github" placeholder="e.g. 1ms23ai009-lgtm"></div>
+    <div><label for="note">Recruiter note (optional)</label><textarea id="note" name="note" rows="2" placeholder="free-text notes…"></textarea></div>
+    <button type="submit">Ingest candidate <span>↗</span></button>
+  </form>
+
   <section class="metrics" aria-label="Candidate metrics">
     <article class="metric panel"><span class="metric-dot"></span><strong>{{ b.total }}</strong><p>Total candidates</p></article>
     <article class="metric panel attention"><span class="metric-dot"></span><strong>{{ b.pending }}</strong><p>Need review</p></article>
@@ -52,7 +60,7 @@
   </section>
 
   <section id="trust-calibration" class="calibration-panel panel">
-    <div class="panel-heading"><div><h2>Source trust calibration</h2><p>Weights self-adjust as recruiters override values &mdash; a corrected source loses trust.</p></div><span class="step">02</span></div>
+    <div class="panel-heading"><div><h2>Source trust calibration</h2><p>Weights self-adjust as recruiters override values &mdash; a corrected source loses trust.</p></div><span class="step">03</span></div>
     <div class="table-wrap"><table>
       <thead><tr><th>Source</th><th>Base weight</th><th>Calibrated</th><th>Overrides</th><th>Records</th><th>Override rate</th></tr></thead>
       <tbody>{% for c in calibration %}<tr>

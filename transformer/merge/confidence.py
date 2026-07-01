@@ -11,7 +11,7 @@ from __future__ import annotations
 from ..model import (
     SOURCE_OVERRIDE, SOURCE_ATS_JSON, SOURCE_RECRUITER_CSV, SOURCE_GITHUB,
     SOURCE_RECRUITER_NOTES, SOURCE_RESUME,
-    METHOD_FIELD_MAP, METHOD_API, METHOD_REGEX, METHOD_HUMAN,
+    METHOD_FIELD_MAP, METHOD_API, METHOD_REGEX, METHOD_LLM, METHOD_HUMAN,
 )
 
 # How much we trust each source's curation. A human correction is trusted above
@@ -30,6 +30,7 @@ METHOD_CERTAINTY = {
     METHOD_HUMAN: 1.00,
     METHOD_FIELD_MAP: 1.00,
     METHOD_API: 0.95,
+    METHOD_LLM: 0.80,   # grounded + verified against the source, but still a model
     METHOD_REGEX: 0.70,
 }
 

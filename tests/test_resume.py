@@ -29,7 +29,7 @@ def test_docx_extraction():
     raw = recs[0].raw
     assert "carlos.reyes@example.com" in raw["emails"]
     assert raw["links"]["portfolio"] == "https://carlosreyes.dev"
-    assert "kafka" in raw["skills"]                       # raw alias; canonicalized later
+    assert "kafka" in [s.lower() for s in raw["skills"]]  # extracted; canonicalized later
 
 
 def test_unreadable_file_degrades():

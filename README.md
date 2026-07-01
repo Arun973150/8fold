@@ -57,6 +57,7 @@ invent a month) · country → **ISO-3166 alpha-2** (`pycountry`) · skills →
 
 ```bash
 pip install -r requirements.txt
+# optional (LLM résumé extractor): cp .env.example .env and add GROQ_API_KEY
 ```
 
 ## Run — two modes
@@ -72,11 +73,13 @@ python app.py
 # open http://127.0.0.1:5000
 ```
 
-A recruiter workflow, not a JSON viewer: a **needs-review inbox**, per-field
-**provenance + color-coded confidence**, **conflicts highlighted** with the
-alternatives, and **override / mark-reviewed** actions. Overrides persist to the
-store as a recruiter correction and **win on the next re-resolve** — the
-human-in-the-loop loop actually closes. (First run auto-seeds from `samples/`.)
+A recruiter workflow, not a JSON viewer: an **"Add a candidate"** panel (upload a
+résumé + GitHub handle + optional note → parse + live GitHub + LLM + merge → land on
+the built profile), a **needs-review inbox**, per-field **provenance + color-coded
+confidence**, **conflicts highlighted** with the alternatives, and **override /
+mark-reviewed** actions. Overrides persist to the store as a recruiter correction and
+**win on the next re-resolve** — the human-in-the-loop loop actually closes. (First
+run auto-seeds from `samples/`.)
 
 ### JSON API (event-driven)
 
@@ -260,23 +263,55 @@ touches the network.
 pytest -q
 ```
 
-49 tests: normalizers (incl. garbage→None), clustering + conflict resolution,
+54 tests: normalizers (incl. garbage→None), clustering + conflict resolution,
 path resolver, all three `on_missing` policies, schema-validation failure,
 mocked-GitHub enrichment, an end-to-end **gold** comparison, the trust layer
 (explain trace, quality flags, review gating), incremental identity resolution +
-store, the API, **résumé PDF/DOCX parsing**, **anomaly detection**, and
+store, the API, **résumé PDF/DOCX parsing**, the **grounded LLM extractor**
+(hallucination-drop verification, no network), **anomaly detection**, and
 **self-calibrating trust**.
 
 ## Résumé parsing — honest scope
 
-PDF/DOCX résumés are a supported source. Text extraction (pdfplumber / python-docx)
-and **contact + links + skills** extraction are robust on real résumés. Structured
-**experience/education** extraction is intentionally **conservative**: it parses
-common labelled layouts and *skips anything it can't parse with confidence* rather
-than guessing — because inventing a job history violates the project's core rule.
-On a free-form real résumé you'll reliably get name/email/phone/skills; structured
-history extraction is best-effort. The principled path to full extraction is an
-LLM-based parser — a deliberate, documented boundary.
+PDF/DOCX résumés are a supported source (pdfplumber / python-docx + heuristics),
+validated against a real résumé:
+
+- **Contact + links** (email, phone, GitHub, LinkedIn, portfolio) — robust, and
+  links are also read from **embedded hyperlink annotations** (résumés often show
+  "LinkedIn"/"GitHub" as clickable text with the URL hidden from the visible text).
+- **Skills are open-vocabulary** — everything listed in a *Skills / Technical Skills*
+  section is extracted, known or not (PyTorch, FastAPI, LangChain, Neo4j…), then
+  known ones are canonicalized and unknown ones kept verbatim. Skills are **not**
+  limited to the alias map — the map only *canonicalizes*, it never gates.
+- **Experience / education** — section- and layout-aware: handles the strict
+  "Title at Company (dates)" form *and* the common real-résumé "Title | Company |
+  Dec 2025 – May 2026" pipe form, with ALL-CAPS headings and unicode dashes handled.
+
+It stays **conservative**: anything it can't parse confidently is skipped, never
+invented. Exotic/graphical layouts and skills named only in prose are best-effort.
+
+### Optional: grounded LLM extractor (LangChain + Groq)
+
+For what the heuristics can't reach (prose skills, messy experience/education), an
+optional LLM extractor ([transformer/extract/](transformer/extract/)) kicks in — and
+it's built so it **cannot hallucinate**:
+
+1. **Prompt** — strictly extractive: copy verbatim, null when absent, never infer.
+2. **Structured output** — forced into a typed Pydantic schema at temperature 0.
+3. **Grounding verification** — every returned string is checked against the source
+   text; anything that doesn't literally appear is **discarded**. The model can only
+   surface what the résumé actually says.
+
+It's tagged `method=llm` and merged with the heuristic record by the normal engine
+(so both corroborate, and provenance shows it). It activates **only** when
+`GROQ_API_KEY` is set; otherwise the pipeline is heuristic-only and fully
+deterministic. Any failure (no key, offline, rate-limit) falls back silently.
+
+```bash
+cp .env.example .env      # then add your Groq key
+# GROQ_API_KEY=gsk_...
+python app.py             # résumés now get the extra llm-tagged extraction
+```
 
 ## Scope deliberately left out
 

@@ -111,4 +111,5 @@ def review_candidate(cid):
 
 
 if __name__ == "__main__":
-    app.run(port=5001, debug=True)
+    # debug off by default (Werkzeug debugger = RCE risk); FLASK_DEBUG=1 to enable.
+    app.run(port=5001, debug=os.environ.get("FLASK_DEBUG") == "1")

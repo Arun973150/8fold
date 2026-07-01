@@ -7,6 +7,12 @@ venv/
 .DS_Store
 *.db
 
+# secrets — never commit the real key (.env.example is committed as a template)
+.env
+
+# user-uploaded résumés from the UI (personal data)
+uploads/
+
 # personal / real resumes dropped in the repo root — never commit to a public repo
 /*.pdf
 /*.docx

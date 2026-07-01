@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+import re
+
 import requests
 
 from ..model import SourceRecord, SOURCE_GITHUB, METHOD_API
@@ -54,6 +56,10 @@ def fetch(handle: str) -> Optional[SourceRecord]:
     if not handle or not isinstance(handle, str):
         return None
     handle = handle.strip().lstrip("@")
+    # Only real GitHub usernames (alnum + single hyphens, <=39) -- prevents a crafted
+    # "handle" from a résumé/notes altering the request path.
+    if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})", handle):
+        return None
     try:
         user = _http_get_json(f"{API}/users/{handle}")
     except requests.RequestException:

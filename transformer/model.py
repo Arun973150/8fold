@@ -31,6 +31,7 @@ SOURCE_OVERRIDE = "recruiter_override"
 METHOD_FIELD_MAP = "field_map"   # came from a labelled column / key
 METHOD_API = "api"               # structured API response
 METHOD_REGEX = "regex"           # pulled out of free text with a pattern
+METHOD_LLM = "llm"               # extracted by an LLM, then verified against source
 METHOD_HUMAN = "human"           # a person entered/confirmed it
 
 
