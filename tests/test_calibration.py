@@ -46,8 +46,8 @@ def test_repository_learns_from_corrections():
     assert rep[SOURCE_ATS_JSON]["overrides"] == 1
     assert rep[SOURCE_ATS_JSON]["calibrated_weight"] < rep[SOURCE_ATS_JSON]["base_weight"]
 
-    # Reindexing applies the learned weight to everyone; Carlos (ATS-heavy) drops.
+    # The learned global weight is applied to everyone immediately.
     carlos_before = repo.get("carlos.reyes@example.com")["canonical"]["overall_confidence"]
-    repo.reindex()
+    repo.add_correction("jane.doe@example.com", "full_name", "Jane Corrected")
     carlos_after = repo.get("carlos.reyes@example.com")["canonical"]["overall_confidence"]
     assert carlos_after <= carlos_before

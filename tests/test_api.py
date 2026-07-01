@@ -69,3 +69,12 @@ def test_review_queue_endpoint(client):
     q = {c["id"] for c in client.get("/review-queue").get_json()}
     assert "sam-lee" in q
     assert "carlos.reyes@example.com" in q   # anomaly-flagged
+
+
+def test_malformed_requests_return_client_errors(client):
+    assert client.post("/ingest", json=[]).status_code == 400
+    assert client.post("/ingest", json={"source": "ats_json", "raw": []}).status_code == 400
+    assert client.post("/ingest/dir", json={"inputs": "../"}).status_code == 400
+    bad = {"fields": [{"path": "x", "from": "bad path"}]}
+    assert client.post("/candidates/jane.doe@example.com/projection", json=bad).status_code == 422
+    assert client.post("/candidates/jane.doe@example.com/projection", json=[]).status_code == 400

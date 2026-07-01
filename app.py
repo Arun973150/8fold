@@ -39,6 +39,18 @@ DISPLAY_ORDER = [
 ]
 
 
+def _safe_inputs_dir(value):
+    """Resolve a UI-supplied input directory only within this project."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    root = os.path.realpath(os.path.dirname(__file__))
+    target = os.path.realpath(os.path.join(root, value))
+    try:
+        return target if os.path.commonpath([root, target]) == root and os.path.isdir(target) else None
+    except ValueError:
+        return None
+
+
 def conf_band(c):
     if c is None:
         return "na"
@@ -110,13 +122,17 @@ def batch_summary(cands):
 @app.route("/", methods=["GET", "POST"])
 def dashboard():
     if request.method == "POST":
-        SETTINGS["inputs"] = request.form.get("inputs", "samples").strip() or "samples"
+        requested = request.form.get("inputs", "samples").strip() or "samples"
+        inputs = _safe_inputs_dir(requested)
+        if inputs is None:
+            return "Inputs directory must be inside the project workspace", 400
+        SETTINGS["inputs"] = requested
         try:
             SETTINGS["threshold"] = float(request.form.get("threshold", 0.6))
         except ValueError:
             pass
         SETTINGS["fetch_github"] = request.form.get("fetch_github") == "on"
-        ingest_dir(REPO, SETTINGS["inputs"], SETTINGS["fetch_github"])
+        ingest_dir(REPO, inputs, SETTINGS["fetch_github"])
         REPO.reindex(SETTINGS["threshold"])
         return redirect(url_for("dashboard"))
 
@@ -204,5 +220,4 @@ if __name__ == "__main__":
     # debug is opt-in: the Werkzeug debugger allows code execution, so never on by
     # default. Enable locally with FLASK_DEBUG=1 if you want auto-reload.
     app.run(debug=os.environ.get("FLASK_DEBUG") == "1", port=5000)
-
 

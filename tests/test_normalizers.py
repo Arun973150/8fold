@@ -28,6 +28,9 @@ def test_dates():
     assert normalize_date("sometime 2021") is None    # unparseable -> None
     assert normalize_year("MIT, 2017") is None        # only clean values parse
     assert normalize_year("2017") == 2017
+    assert normalize_date("2021-13") is None          # invalid month is garbage
+    assert normalize_date(2021.9) is None              # do not truncate decimals
+    assert normalize_date(True) is None                # bool is not a year
 
 
 def test_country_iso():

@@ -65,6 +65,10 @@ def score(existing_keys: List[Tuple[str, str]], incoming_keys: List[Tuple[str, s
     in_strong = {(t, v) for t, v in incoming_keys if t in STRONG}
     if ex_strong & in_strong:
         return 1.0  # any shared strong key -> same person
+    # A common/similar name must not override conflicting or one-sided strong
+    # identity evidence. Name fallback is only for two records with no strong keys.
+    if ex_strong or in_strong:
+        return 0.0
     en, inn = name_of(existing_keys), name_of(incoming_keys)
     if en and inn:
         ratio = fuzz.token_sort_ratio(en, inn)

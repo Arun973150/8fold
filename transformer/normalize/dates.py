@@ -27,13 +27,17 @@ def _fmt(year: int, month: Optional[int]) -> Optional[str]:
     if month is None:
         return f"{year:04d}"
     if not (1 <= month <= 12):
-        return f"{year:04d}"
+        return None
     return f"{year:04d}-{month:02d}"
 
 
 def normalize_date(value) -> Optional[str]:
     """Return a YYYY-MM / YYYY string, or None (None also means 'present')."""
     if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, float) and not value.is_integer():
         return None
     if isinstance(value, (int, float)):
         return _fmt(int(value), None)

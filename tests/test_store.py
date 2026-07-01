@@ -26,6 +26,21 @@ def test_reingest_with_origin_refreshes_without_duplicates():
     assert repo.get(cid)["canonical"]["full_name"] == "Arun N"   # refreshed to latest
 
 
+def test_origin_refresh_removes_stale_identity_keys():
+    repo = Repository(":memory:")
+    cid = repo.ingest(SourceRecord(SOURCE_ATS_JSON,
+                                   {"full_name": "Alice One", "emails": ["old@example.com"]}),
+                      origin="ats:1")
+    repo.ingest(SourceRecord(SOURCE_ATS_JSON,
+                             {"full_name": "Alice One", "emails": ["new@example.com"]}),
+                origin="ats:1")
+    assert ("email", "old@example.com") not in repo._candidate_keys(cid)
+    other = repo.ingest(SourceRecord(SOURCE_RECRUITER_CSV,
+                                     {"full_name": "Different Person",
+                                      "emails": ["old@example.com"]}))
+    assert other != cid
+
+
 def test_delete_removes_candidate_and_records():
     repo = Repository(":memory:")
     ingest_dir(repo, SAMPLES)
@@ -67,6 +82,8 @@ def test_identity_score_strong_vs_name():
     n2 = [("name", "jonathan smith")]
     assert identity.score(n1, n2) >= 0.9      # identical name links
     assert identity.score([("name", "alice")], [("name", "bob")]) == 0.0
+    assert identity.score([("email", "a@x.com"), ("name", "sam lee")],
+                          [("email", "b@x.com"), ("name", "sam lee")]) == 0.0
 
 
 def test_correction_wins_and_review_is_sticky():

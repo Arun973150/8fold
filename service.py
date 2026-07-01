@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 
+import jsonschema
 from flask import Flask, request, jsonify
 
 from transformer.store import Repository
@@ -30,6 +31,23 @@ ensure_seeded(repo, "samples", fetch_github=False)
 app = Flask(__name__)
 
 
+def _json_object():
+    body = request.get_json(force=True, silent=True)
+    return body if isinstance(body, dict) else None
+
+
+def _safe_input_dir(value):
+    """Allow directory ingestion only from inside this project workspace."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    root = os.path.realpath(os.path.dirname(__file__))
+    target = os.path.realpath(os.path.join(root, value))
+    try:
+        return target if os.path.commonpath([root, target]) == root else None
+    except ValueError:
+        return None
+
+
 @app.get("/health")
 def health():
     return jsonify(status="ok", candidates=repo.count(), threshold=repo.threshold)
@@ -38,9 +56,15 @@ def health():
 @app.post("/ingest")
 def ingest_one():
     """Ingest a single source record: {source, raw, methods?}."""
-    body = request.get_json(force=True, silent=True) or {}
-    if "source" not in body or "raw" not in body:
-        return jsonify(error="body requires 'source' and 'raw'"), 400
+    body = _json_object()
+    if body is None:
+        return jsonify(error="body must be a JSON object"), 400
+    if not isinstance(body.get("source"), str) or not body["source"].strip():
+        return jsonify(error="'source' must be a non-empty string"), 400
+    if not isinstance(body.get("raw"), dict):
+        return jsonify(error="'raw' must be an object"), 400
+    if "methods" in body and not isinstance(body["methods"], dict):
+        return jsonify(error="'methods' must be an object"), 400
     rec = SourceRecord(body["source"], body["raw"], body.get("methods", {}))
     cid = repo.ingest(rec)
     return jsonify(candidate_id=cid, status=repo.get(cid)["status"])
@@ -48,8 +72,13 @@ def ingest_one():
 
 @app.post("/ingest/dir")
 def ingest_directory():
-    body = request.get_json(force=True, silent=True) or {}
-    n = ingest_dir(repo, body.get("inputs", "samples"), bool(body.get("fetch_github")))
+    body = _json_object()
+    if body is None:
+        return jsonify(error="body must be a JSON object"), 400
+    inputs = _safe_input_dir(body.get("inputs", "samples"))
+    if inputs is None or not os.path.isdir(inputs):
+        return jsonify(error="'inputs' must be a directory inside the project workspace"), 400
+    n = ingest_dir(repo, inputs, bool(body.get("fetch_github")))
     return jsonify(count=n)
 
 
@@ -90,11 +119,13 @@ def project_candidate(cid):
     rec = repo.get(cid)
     if rec is None:
         return jsonify(error="not found"), 404
-    config = request.get_json(force=True, silent=True)
+    config = _json_object()
+    if config is None:
+        return jsonify(error="body must be a projection config object"), 400
     try:
         view = project_root(rec["canonical"], config)
         validate(view, config)
-    except ProjectionError as e:
+    except (ProjectionError, ValueError, KeyError, TypeError, jsonschema.ValidationError) as e:
         return jsonify(error=str(e)), 422
     return jsonify(view)
 

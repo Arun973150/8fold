@@ -67,7 +67,7 @@ class Repository:
                         "UPDATE source_record SET raw_json=?, methods_json=?, ingested_at=? WHERE id=?",
                         (raw_json, json.dumps(record.methods), _now(), sr_id),
                     )
-                    self._save_keys(cid, keys)
+                    self._rebuild_keys(cid)
                     self.conn.commit()
                     self._resolve_and_save(cid)
                 return cid  # (no origin: identical content, nothing to do)
@@ -139,6 +139,12 @@ class Repository:
                 (t, v, cid),
             )
 
+    def _rebuild_keys(self, cid: str):
+        """Replace derived keys after an origin-backed source refresh."""
+        self.conn.execute("DELETE FROM candidate_key WHERE candidate_id=?", (cid,))
+        for stored in self._records_for(cid):
+            self._save_keys(cid, identity.blocking_keys(stored))
+
     # ------------------------------------------------------------------ #
     # Re-resolution
     # ------------------------------------------------------------------ #
@@ -209,7 +215,8 @@ class Repository:
             # Attribute the correction to whichever source currently owns this field,
             # so self-calibration can learn that source is less reliable here.
             displaced = self._winner_source(cid, field)
-            if displaced and displaced != SOURCE_OVERRIDE:
+            weights_changed = bool(displaced and displaced != SOURCE_OVERRIDE)
+            if weights_changed:
                 self.conn.execute(
                     "INSERT INTO source_stat(source,overrides) VALUES (?,1)"
                     " ON CONFLICT(source) DO UPDATE SET overrides=overrides+1",
@@ -222,7 +229,11 @@ class Repository:
                 (cid, field, str(value), _now()),
             )
             self.conn.commit()
-            self._resolve_and_save(cid)  # correction wins on re-resolve
+            if weights_changed:
+                # Source weights are global, so keep every stored profile current.
+                self.reindex()
+            else:
+                self._resolve_and_save(cid)
 
     def set_status(self, cid: str, status: str):
         with self._lock:

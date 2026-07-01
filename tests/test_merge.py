@@ -25,6 +25,12 @@ def test_cluster_by_shared_email():
     assert sizes == [1, 2]  # Jane records merge, Bob alone
 
 
+def test_same_name_with_conflicting_strong_keys_stays_separate():
+    a = SourceRecord(SOURCE_RECRUITER_CSV, {"full_name": "Sam Lee", "emails": ["one@x.com"]})
+    b = SourceRecord(SOURCE_ATS_JSON, {"full_name": "Sam Lee", "emails": ["two@x.com"]})
+    assert sorted(len(g) for g in cluster([a, b])) == [1, 1]
+
+
 def test_scalar_winner_by_reliability_weight():
     # ATS (weight .9) should beat notes (weight .5) for full_name.
     ats = SourceRecord(SOURCE_ATS_JSON, {"full_name": "Jane A. Doe", "emails": ["j@x.com"]},
@@ -47,3 +53,9 @@ def test_skill_corroboration_boosts_confidence():
     c_two = two.skills[0]["confidence"]
     assert two.skills[0]["sources"] == [SOURCE_ATS_JSON, SOURCE_RECRUITER_NOTES]
     assert c_two > c_one  # corroboration raises confidence
+
+
+def test_disjoint_list_values_do_not_get_agreement_bonus():
+    ats = SourceRecord(SOURCE_ATS_JSON, {"emails": ["work@x.com"]})
+    notes = SourceRecord(SOURCE_RECRUITER_NOTES, {"emails": ["personal@x.com"]})
+    assert resolve([ats, notes], "c").field_confidence["emails"] == 0.9

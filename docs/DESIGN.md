@@ -31,8 +31,9 @@ total: garbage in → `None` out, never an exception.
 
 ### Merge / conflict resolution & confidence
 
-- **Match key:** shared normalized email, else shared normalized full name
-  (union-find). Different names are *not* fuzzily merged (documented limit).
+- **Match key:** shared normalized email, phone, or GitHub handle. Exact-name fallback
+  is allowed only when both records have no strong key, preventing common names from
+  overriding conflicting contact evidence.
 - **Scalar winner:** `source_reliability_weight × method_certainty`
   (ATS, CSV > GitHub > notes), deterministic tie-break. **All** contributing
   sources — winners and losers — are recorded in `provenance`.
@@ -77,10 +78,11 @@ passes.
 
 ### Scope deliberately deferred (under time pressure)
 
-LinkedIn (no public API / ToS); ML/LLM-based identity resolution and résumé
-extraction — replaced by deterministic heuristics + a fuzzy-matched alias map. Five
-sources — Recruiter CSV + ATS JSON (structured) and GitHub API + recruiter notes +
-résumés (PDF/DOCX, unstructured) — exercise the full merge/conflict path.
+LinkedIn ingestion (no public API / ToS), ML-based identity resolution, and complete
+support for arbitrary graphical résumé layouts. Five sources — Recruiter CSV + ATS
+JSON (structured) and GitHub API + recruiter notes + résumés (PDF/DOCX, unstructured)
+— exercise the full merge/conflict path. Résumé parsing uses deterministic heuristics
+plus an optional strictly grounded LLM pass.
 
 **Surface:** a minimal Flask web UI (primary) plus a thin CLI; both call one shared
 engine. **Determinism with a live GitHub call:** the single HTTP seam is mocked in

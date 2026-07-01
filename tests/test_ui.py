@@ -62,3 +62,8 @@ def test_ingest_rejects_non_resume_extension(client):
     r = c.post("/ingest-candidate", data=data, content_type="multipart/form-data")
     assert r.status_code == 302
     assert app_module.REPO.count() == before   # .csv ignored, nothing ingested
+
+
+def test_dashboard_rejects_input_directory_outside_project(client):
+    c, _ = client
+    assert c.post("/", data={"inputs": "../"}).status_code == 400

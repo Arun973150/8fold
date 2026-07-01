@@ -34,10 +34,18 @@ def _prio(source: str) -> int:
 # Clustering
 # --------------------------------------------------------------------------- #
 def _identity_keys(rec: SourceRecord) -> Tuple[set, Optional[str]]:
-    emails = set(normalize_emails(rec.raw.get("emails")))
+    strong = {("email", e) for e in normalize_emails(rec.raw.get("emails"))}
+    strong.update(("phone", p) for p in normalize_phones(rec.raw.get("phones")))
+    links = rec.raw.get("links")
+    if isinstance(links, dict) and links.get("github"):
+        github = str(links["github"]).strip().rstrip("/")
+        if "github.com/" in github:
+            github = github.split("github.com/")[-1].split("/")[0]
+        if github.lstrip("@"):
+            strong.add(("github", github.lstrip("@").lower()))
     name = rec.raw.get("full_name")
     name_key = name.strip().lower() if isinstance(name, str) and name.strip() else None
-    return emails, name_key
+    return strong, name_key
 
 
 def cluster(records: List[SourceRecord]) -> List[List[SourceRecord]]:
@@ -57,15 +65,17 @@ def cluster(records: List[SourceRecord]) -> List[List[SourceRecord]]:
     # Link records that share an email or a name.
     by_email: dict = {}
     by_name: dict = {}
-    for i, (emails, name_key) in enumerate(keys):
-        for e in emails:
-            if e in by_email:
-                union(i, by_email[e])
+    for i, (strong_keys, name_key) in enumerate(keys):
+        for strong_key in strong_keys:
+            if strong_key in by_email:
+                union(i, by_email[strong_key])
             else:
-                by_email[e] = i
+                by_email[strong_key] = i
         if name_key:
             if name_key in by_name:
-                union(i, by_name[name_key])
+                other = by_name[name_key]
+                if not strong_keys and not keys[other][0]:
+                    union(i, other)
             else:
                 by_name[name_key] = i
 
@@ -239,6 +249,7 @@ def _resolve_list(records, field, normalize_many, weights=None):
     values: List[str] = []
     contributors = []
     considered = []
+    value_sources: dict = {}
     dropped = 0
     for rec in records:
         if field not in rec.raw:
@@ -253,12 +264,15 @@ def _resolve_list(records, field, normalize_many, weights=None):
         contributors.append((rec.source, rec.method_for(field)))
         considered.append({"source": rec.source, "method": rec.method_for(field), "values": norm})
         for v in norm:
+            value_sources.setdefault(v, set()).add(rec.source)
             if v not in values:
                 values.append(v)
     if not values:
         return [], 0.0, [], None
     best_base = max(conf.base_confidence(s, m, weights, field) for (s, m) in contributors)
-    confidence = conf.adjusted(best_base, len(contributors), had_conflict=False)
+    # Disjoint values are contributions, not corroboration.
+    max_agreement = max(len(sources) for sources in value_sources.values())
+    confidence = conf.adjusted(best_base, max_agreement, had_conflict=False)
     prov = [{"field": field, "source": s, "method": m} for (s, m) in contributors]
     reason = f"union of {len(contributors)} source(s), deduped to {len(values)} value(s)"
     if dropped:

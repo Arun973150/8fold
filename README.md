@@ -143,8 +143,9 @@ config before it is returned.
 
 ## Merge & confidence (deterministic)
 
-- **Identity / match key:** shared normalized email, else shared normalized name
-  (union-find). We do *not* fuzzily merge different names — documented limitation.
+- **Identity / match key:** shared normalized email, phone, or GitHub handle. Exact
+  name is only a fallback when both records lack every strong key; a common name
+  never overrides conflicting contact evidence.
 - **Scalar winner:** source reliability weight (ATS, CSV > GitHub > notes) ×
   extraction-method certainty; ties broken deterministically. **Every** contributing
   source is kept in `provenance`, even the losers.
@@ -263,7 +264,7 @@ touches the network.
 pytest -q
 ```
 
-54 tests: normalizers (incl. garbage→None), clustering + conflict resolution,
+67 tests: normalizers (incl. garbage→None), clustering + conflict resolution,
 path resolver, all three `on_missing` policies, schema-validation failure,
 mocked-GitHub enrichment, an end-to-end **gold** comparison, the trust layer
 (explain trace, quality flags, review gating), incremental identity resolution +
@@ -315,6 +316,7 @@ python app.py             # résumés now get the extra llm-tagged extraction
 
 ## Scope deliberately left out
 
-LinkedIn (no public API / ToS); ML/LLM-based identity resolution and résumé
-extraction (we use deterministic heuristics + a fuzzy-matched alias map). These are
-conscious trade-offs, not oversights.
+LinkedIn ingestion (no public API / ToS), ML-based identity resolution, and complete
+support for arbitrary graphical résumé layouts. These are conscious trade-offs, not
+oversights; résumé extraction itself uses deterministic heuristics plus an optional,
+strictly grounded LLM pass.

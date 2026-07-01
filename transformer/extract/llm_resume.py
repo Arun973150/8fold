@@ -93,6 +93,16 @@ def _grounded(value, haystack: str) -> bool:
     return _norm(value) in haystack
 
 
+def _grounded_number(value, text: str) -> bool:
+    """Require a numeric model value to occur as a complete source token."""
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    forms = {str(value)}
+    if isinstance(value, float) and value.is_integer():
+        forms.add(str(int(value)))
+    return any(re.search(rf"(?<![\d.]){re.escape(form)}(?![\d.])", text) for form in forms)
+
+
 def _verify(data: ResumeExtract, text: str) -> dict:
     """Drop any value that is not grounded in the résumé text."""
     hay = _norm(text)
@@ -137,27 +147,35 @@ def _verify(data: ResumeExtract, text: str) -> dict:
 
     exp = []
     for e in data.experience:
-        # keep an entry only if its company or title is grounded
-        if _grounded(e.company, hay) or _grounded(e.title, hay):
+        company = e.company.strip() if _grounded(e.company, hay) else None
+        title = e.title.strip() if _grounded(e.title, hay) else None
+        # One real company must not legitimize invented dates or a fake title.
+        if company or title:
             exp.append({
-                "company": e.company, "title": e.title,
-                "start": e.start, "end": e.end,
-                "summary": e.summary if _grounded(e.summary, hay) else None,
+                "company": company,
+                "title": title,
+                "start": e.start.strip() if _grounded(e.start, hay) else None,
+                "end": e.end.strip() if _grounded(e.end, hay) else None,
+                "summary": e.summary.strip() if _grounded(e.summary, hay) else None,
             })
     if exp:
         raw["experience"] = exp
 
     edu = []
     for e in data.education:
-        if _grounded(e.institution, hay) or _grounded(e.degree, hay):
+        institution = e.institution.strip() if _grounded(e.institution, hay) else None
+        degree = e.degree.strip() if _grounded(e.degree, hay) else None
+        if institution or degree:
             edu.append({
-                "institution": e.institution, "degree": e.degree,
-                "field": e.field, "end_year": e.end_year,
+                "institution": institution,
+                "degree": degree,
+                "field": e.field.strip() if _grounded(e.field, hay) else None,
+                "end_year": e.end_year if _grounded_number(e.end_year, text) else None,
             })
     if edu:
         raw["education"] = edu
 
-    if isinstance(data.years_experience, (int, float)):
+    if _grounded_number(data.years_experience, text):
         raw["years_experience"] = float(data.years_experience)
 
     return raw

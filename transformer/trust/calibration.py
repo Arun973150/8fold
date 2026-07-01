@@ -10,8 +10,8 @@ relative to how often it is actually relied on.
     calibrated_weight       = base * max(floor, 1 - damping * override_rate)
 
 * ``overrides``  -- how many times this source's winning value was corrected.
-* ``exposure``   -- how many fields this source currently wins (so a source that
-                    wins a lot isn't unfairly punished for a few corrections).
+* ``exposure``   -- how many source records were ingested (a stable denominator,
+                    unaffected when calibration changes which value wins).
 
 Deterministic and bounded: weights never drop below ``floor`` x base, and with no
 corrections the function returns the static defaults unchanged.
