@@ -105,20 +105,20 @@ def _resolve_scalar(records, field, transform=lambda x: x, weights=None):
     # Winner: highest base confidence, tie-broken by source priority.
     cands_sorted = sorted(
         cands,
-        key=lambda c: (-conf.base_confidence(c[1], c[2], weights), _prio(c[1])),
+        key=lambda c: (-conf.base_confidence(c[1], c[2], weights, field), _prio(c[1])),
     )
     winner_value, winner_source, winner_method = cands_sorted[0]
     distinct = {c[0] for c in cands}
     had_conflict = len(distinct) > 1
     agree = sum(1 for c in cands if c[0] == winner_value)
-    base = conf.base_confidence(winner_source, winner_method, weights)
+    base = conf.base_confidence(winner_source, winner_method, weights, field)
     confidence = conf.adjusted(base, agree, had_conflict)
     provenance = [{"field": field, "source": s, "method": m} for (_, s, m) in cands]
 
     considered = [
         {
             "value": v, "source": s, "method": m,
-            "base": conf.base_confidence(s, m, weights),
+            "base": conf.base_confidence(s, m, weights, field),
             "won": (v == winner_value and s == winner_source and m == winner_method),
         }
         for (v, s, m) in cands_sorted
@@ -257,7 +257,7 @@ def _resolve_list(records, field, normalize_many, weights=None):
                 values.append(v)
     if not values:
         return [], 0.0, [], None
-    best_base = max(conf.base_confidence(s, m, weights) for (s, m) in contributors)
+    best_base = max(conf.base_confidence(s, m, weights, field) for (s, m) in contributors)
     confidence = conf.adjusted(best_base, len(contributors), had_conflict=False)
     prov = [{"field": field, "source": s, "method": m} for (s, m) in contributors]
     reason = f"union of {len(contributors)} source(s), deduped to {len(values)} value(s)"
@@ -287,7 +287,7 @@ def _resolve_location(records, weights=None):
                 contributed = True
         if contributed:
             prov.append({"field": "location", "source": rec.source, "method": rec.method_for("location")})
-            best_conf = max(best_conf, conf.base_confidence(rec.source, rec.method_for("location"), weights))
+            best_conf = max(best_conf, conf.base_confidence(rec.source, rec.method_for("location"), weights, "location"))
     return parts, prov, round(best_conf, 4)
 
 
@@ -328,7 +328,7 @@ def _resolve_skills(records, weights=None):
             entry = agg.setdefault(canon, {"sources": [], "base": 0.0})
             if rec.source not in entry["sources"]:
                 entry["sources"].append(rec.source)
-            entry["base"] = max(entry["base"], conf.base_confidence(rec.source, method, weights))
+            entry["base"] = max(entry["base"], conf.base_confidence(rec.source, method, weights, "skills"))
     skills = []
     prov = []
     best_conf = 0.0

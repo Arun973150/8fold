@@ -37,17 +37,28 @@ METHOD_CERTAINTY = {
 CONFLICT_PENALTY = 0.85   # multiplier when sources disagreed on the winner
 AGREEMENT_BONUS = 0.07    # added per corroborating source beyond the first
 
+# Per-(field, source) trust overrides: a source can be authoritative for some fields
+# but not others. A GitHub "name" is usually a display nickname ("void"), not a legal
+# name, so GitHub is trusted far less than a résumé/ATS/CSV for full_name specifically
+# (it still wins when nothing else supplies a name).
+FIELD_SOURCE_WEIGHT = {
+    ("full_name", SOURCE_GITHUB): 0.30,
+}
 
-def base_confidence(source: str, method: str, weights: dict = None) -> float:
+
+def base_confidence(source: str, method: str, weights: dict = None, field: str = None) -> float:
     """Base confidence = source weight x method certainty.
 
-    ``weights`` optionally overrides the static SOURCE_WEIGHT per source -- this is
-    how the self-calibrating trust layer feeds learned reliabilities back into the
-    engine without touching the static defaults.
+    A ``(field, source)`` override (see FIELD_SOURCE_WEIGHT) takes precedence -- some
+    sources are unreliable for specific fields. Otherwise ``weights`` may override the
+    static SOURCE_WEIGHT per source, which is how the self-calibrating trust layer
+    feeds learned reliabilities back into the engine.
     """
-    w = SOURCE_WEIGHT.get(source, 0.4)
-    if weights and source in weights:
-        w = weights[source]
+    w = FIELD_SOURCE_WEIGHT.get((field, source))
+    if w is None:
+        w = SOURCE_WEIGHT.get(source, 0.4)
+        if weights and source in weights:
+            w = weights[source]
     return round(w * METHOD_CERTAINTY.get(method, 0.6), 4)
 
 

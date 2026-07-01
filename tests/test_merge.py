@@ -2,9 +2,18 @@
 
 from transformer.model import (
     SourceRecord, SOURCE_ATS_JSON, SOURCE_RECRUITER_CSV, SOURCE_RECRUITER_NOTES,
-    METHOD_FIELD_MAP, METHOD_REGEX,
+    SOURCE_GITHUB, SOURCE_RESUME, METHOD_FIELD_MAP, METHOD_REGEX, METHOD_API,
 )
 from transformer.merge.resolver import cluster, resolve
+
+
+def test_github_name_downweighted_vs_resume():
+    # A GitHub display name is a nickname; per-field trust makes the résumé win.
+    gh = SourceRecord(SOURCE_GITHUB, {"full_name": "void", "emails": ["a@b.com"]}, {"full_name": METHOD_API})
+    rv = SourceRecord(SOURCE_RESUME, {"full_name": "Arun N", "emails": ["a@b.com"]}, {"full_name": METHOD_REGEX})
+    assert resolve([gh, rv], "a@b.com").full_name == "Arun N"
+    # ...but GitHub still supplies a name when it is the only source.
+    assert resolve([gh], "a@b.com").full_name == "void"
 
 
 def test_cluster_by_shared_email():
