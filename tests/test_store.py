@@ -6,10 +6,34 @@ from transformer.store import Repository
 from transformer.store.ingest import ingest_dir
 from transformer.model import (
     SourceRecord, SOURCE_ATS_JSON, SOURCE_RECRUITER_CSV, SOURCE_RECRUITER_NOTES,
+    SOURCE_GITHUB, METHOD_API,
 )
 from transformer.merge import identity
 
 SAMPLES = os.path.join(os.path.dirname(__file__), "..", "samples")
+
+
+def test_reingest_with_origin_refreshes_without_duplicates():
+    repo = Repository(":memory:")
+    cid = repo.ingest(SourceRecord(SOURCE_GITHUB, {"full_name": "void", "emails": ["a@b.com"]},
+                                   {"full_name": METHOD_API}), origin="github:me")
+    # same logical source, changed content -> replaces in place
+    cid2 = repo.ingest(SourceRecord(SOURCE_GITHUB, {"full_name": "Arun N", "emails": ["a@b.com"]},
+                                    {"full_name": METHOD_API}), origin="github:me")
+    assert cid == cid2
+    n = repo.conn.execute("SELECT COUNT(*) AS c FROM source_record WHERE candidate_id=?", (cid,)).fetchone()["c"]
+    assert n == 1                                          # not duplicated
+    assert repo.get(cid)["canonical"]["full_name"] == "Arun N"   # refreshed to latest
+
+
+def test_delete_removes_candidate_and_records():
+    repo = Repository(":memory:")
+    ingest_dir(repo, SAMPLES)
+    repo.delete("sam-lee")
+    assert repo.get("sam-lee") is None
+    assert "sam-lee" not in {c["id"] for c in repo.list_candidates()}
+    assert repo.conn.execute("SELECT COUNT(*) AS c FROM source_record WHERE candidate_id=?",
+                             ("sam-lee",)).fetchone()["c"] == 0
 
 
 def test_ingest_clusters_and_is_idempotent():

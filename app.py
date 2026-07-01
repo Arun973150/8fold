@@ -160,36 +160,44 @@ def review(cid):
 def ingest_candidate():
     """Interactive ingest: a résumé upload + optional GitHub handle + optional note,
     fused into one candidate and shown live."""
-    records = []
+    # Each source is ingested with a stable ``origin`` so re-uploading the same
+    # résumé / re-fetching the same GitHub profile refreshes it instead of piling
+    # up duplicates.
+    cids = []
+    discovered_handle = None
 
     f = request.files.get("resume")
     if f and f.filename and f.filename.lower().endswith((".pdf", ".docx")):
-        path = os.path.join(UPLOADS, secure_filename(f.filename))
-        f.save(path)
-        records += resume_source.load(path)   # heuristic (+ LLM if GROQ_API_KEY set)
+        fname = secure_filename(f.filename)
+        f.save(os.path.join(UPLOADS, fname))
+        for rec in resume_source.load(os.path.join(UPLOADS, fname)):  # heuristic (+ LLM)
+            tag = "-".join(sorted(set(rec.methods.values())))  # regex vs llm record
+            cids.append(REPO.ingest(rec, origin=f"resume:{fname}:{tag}"))
+            gh = (rec.raw.get("links") or {}).get("github")
+            if gh and not discovered_handle:
+                discovered_handle = str(gh).rstrip("/").split("/")[-1]
 
     note = (request.form.get("note") or "").strip()
     if note:
         raw = notes_source.parse_text(note)
         if raw:
-            records.append(SourceRecord(SOURCE_RECRUITER_NOTES, raw, {k: METHOD_REGEX for k in raw}))
+            cids.append(REPO.ingest(SourceRecord(SOURCE_RECRUITER_NOTES, raw,
+                                                 {k: METHOD_REGEX for k in raw})))
 
-    # GitHub handle: typed wins, else discovered from a résumé hyperlink.
-    handle = (request.form.get("github") or "").strip().lstrip("@")
-    if not handle:
-        for r in records:
-            gh = (r.raw.get("links") or {}).get("github")
-            if gh:
-                handle = str(gh).rstrip("/").split("/")[-1]
-                break
+    # GitHub handle: typed wins, else the one discovered from a résumé hyperlink.
+    handle = (request.form.get("github") or "").strip().lstrip("@") or discovered_handle
     if handle:
         gh_rec = github_source.fetch(handle)   # live, degrades to None
         if gh_rec:
-            records.append(gh_rec)
+            cids.append(REPO.ingest(gh_rec, origin=f"github:{handle.lower()}"))
 
-    # Ingest all; identity resolution clusters them into one candidate.
-    cids = [REPO.ingest(r) for r in records]
     return redirect(url_for("candidate", cid=cids[0]) if cids else url_for("dashboard"))
+
+
+@app.route("/candidate/<path:cid>/delete", methods=["POST"])
+def delete_candidate(cid):
+    REPO.delete(cid)
+    return redirect(url_for("dashboard"))
 
 
 if __name__ == "__main__":

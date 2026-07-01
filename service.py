@@ -77,6 +77,14 @@ def get_candidate(cid):
     return jsonify(rec)
 
 
+@app.delete("/candidates/<path:cid>")
+def delete_candidate(cid):
+    if repo.get(cid) is None:
+        return jsonify(error="not found"), 404
+    repo.delete(cid)
+    return jsonify(deleted=cid)
+
+
 @app.post("/candidates/<path:cid>/projection")
 def project_candidate(cid):
     rec = repo.get(cid)

@@ -41,20 +41,38 @@ class Repository:
     # ------------------------------------------------------------------ #
     # Ingestion + identity resolution
     # ------------------------------------------------------------------ #
-    def ingest(self, record: SourceRecord) -> str:
+    def ingest(self, record: SourceRecord, origin: str = None) -> str:
+        """Ingest one source record.
+
+        Idempotency has two modes:
+        * no ``origin`` -> keyed by content hash (identical data is skipped).
+        * with ``origin`` -> keyed by a stable logical id (e.g. a résumé filename or
+          ``github:<handle>``). Re-ingesting the SAME source **refreshes it in place**
+          instead of appending -- so re-uploading a résumé or re-fetching a GitHub
+          profile (whose live/LLM output varies) never accumulates duplicates.
+        """
         with self._lock:
             raw_json = json.dumps(record.raw, sort_keys=True, ensure_ascii=False)
-            sr_id = hashlib.sha1(f"{record.source}|{raw_json}".encode("utf-8")).hexdigest()
+            key = f"{record.source}|origin|{origin}" if origin else f"{record.source}|{raw_json}"
+            sr_id = hashlib.sha1(key.encode("utf-8")).hexdigest()
+            keys = identity.blocking_keys(record)
 
             existing = self.conn.execute(
                 "SELECT candidate_id FROM source_record WHERE id=?", (sr_id,)
             ).fetchone()
             if existing:
-                return existing["candidate_id"]  # idempotent: already ingested
+                cid = existing["candidate_id"]
+                if origin:  # same logical source -> refresh its content, re-resolve
+                    self.conn.execute(
+                        "UPDATE source_record SET raw_json=?, methods_json=?, ingested_at=? WHERE id=?",
+                        (raw_json, json.dumps(record.methods), _now(), sr_id),
+                    )
+                    self._save_keys(cid, keys)
+                    self.conn.commit()
+                    self._resolve_and_save(cid)
+                return cid  # (no origin: identical content, nothing to do)
 
-            keys = identity.blocking_keys(record)
             cid = self._match_or_create(record, keys)
-
             self.conn.execute(
                 "INSERT INTO source_record(id,candidate_id,source,raw_json,methods_json,ingested_at)"
                 " VALUES (?,?,?,?,?,?)",
@@ -64,6 +82,15 @@ class Repository:
             self.conn.commit()
             self._resolve_and_save(cid)
             return cid
+
+    def delete(self, cid: str) -> None:
+        """Remove a candidate and everything derived from it."""
+        with self._lock:
+            self.conn.execute("DELETE FROM source_record WHERE candidate_id=?", (cid,))
+            self.conn.execute("DELETE FROM candidate_key WHERE candidate_id=?", (cid,))
+            self.conn.execute("DELETE FROM correction WHERE candidate_id=?", (cid,))
+            self.conn.execute("DELETE FROM candidate WHERE id=?", (cid,))
+            self.conn.commit()
 
     def _match_or_create(self, record: SourceRecord, keys: List[Tuple[str, str]]) -> str:
         candidate_ids = self._find_candidates_by_keys(keys)

@@ -32,7 +32,10 @@
     {% if c.options %}<form class="options" method="post" action="{{ url_for('override', cid=cid) }}"><input type="hidden" name="field" value="{{ c.field }}">{% for o in c.options %}<label><input type="radio" name="value" value="{{ o.value }}" {{ 'checked' if o.won else '' }}><span>{{ o.value }} <small>({{ o.source }}, base {{ o.base }})</small></span></label>{% endfor %}<button class="outline-button" type="submit">Override &amp; persist</button></form>{% endif %}
   </article>{% endfor %}
   </section>
-  <form class="review-action" method="post" action="{{ url_for('review', cid=cid) }}"><button type="submit">Mark reviewed &amp; accept <span>✓</span></button></form>
+  <div class="candidate-actions">
+    <form class="review-action" method="post" action="{{ url_for('review', cid=cid) }}"><button type="submit">Mark reviewed &amp; accept <span>✓</span></button></form>
+    <form method="post" action="{{ url_for('delete_candidate', cid=cid) }}" onsubmit="return confirm('Delete this candidate and all its source records?');"><button class="outline-button" type="submit">Delete candidate</button></form>
+  </div>
 </main>
 </body>
 </html>
